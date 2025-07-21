@@ -1,0 +1,58 @@
+# Kubernetes deployment template (service_template.yaml)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fd-simulate-reader
+  labels:
+    app: fd-simulate-reader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fd-simulate-reader
+  template:
+    metadata:
+      labels:
+        app: fd-simulate-reader
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: fd-simulate-reader
+          image: fd-simulate-reader:latest  # Replace with your Docker registry
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: metrics
+          envFrom:
+            - configMapRef:
+                name: global-env-vars
+            - secretRef:
+                name: mongodb-secrets
+            - secretRef:
+                name: kafka-env-secrets
+          env:
+            - name: FD_SERVICE_NAME
+              value: "fd-simulate-reader"
+            - name: FD_METRICS_PORT
+              value: "8000"
+            - name: FD_LOG_LEVEL
+              value: "INFO"
+            - name: FD_KAFKA_BROKER
+              value: "kafka:9092"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"  # Updated to match the actual service name
+            - name: KAFKA_TOPIC
+              value: "telematics.raw"
+            - name: KAFKA_SECURITY_PROTOCOL
+              value: "PLAINTEXT"
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "256Mi"
+            requests:
+              cpu: "0.1"
+              memory: "128Mi"

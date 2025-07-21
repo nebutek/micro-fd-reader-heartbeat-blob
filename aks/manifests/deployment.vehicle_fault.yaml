@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fd-reader-vehicle-fault-blob
+  namespace: fleetdefender
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fd-reader-vehicle-fault-blob
+  template:
+    metadata:
+      labels:
+        app: fd-reader-vehicle-fault-blob
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: fd-reader-vehicle-fault-blob
+        image: betacontainers.azurecr.io/fd-reader-heartbeat-blob:latest
+        ports:
+        - containerPort: 8000  # Main API
+        - containerPort: 9090  # Metrics
+        env:
+        - name: FD_SERVICE_NAME
+          value: "fd-reader-vehicle-fault-blob"
+        - name: FD_KAFKA_TOPIC
+          value: "telematics.raw.vehicle_fault"
+        - name: FD_MONGO_COLLECTION_NAME
+          value: "vehicle_faults"
+
+        envFrom:
+        - configMapRef:
+            name: global-env-vars
+        - secretRef:
+            name: mongodb-secrets
+        - secretRef:
+            name: kafka-secrets

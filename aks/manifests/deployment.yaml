@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fd-reader-heartbeat-blob
+  namespace: fleetdefender
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fd-reader-heartbeat-blob
+  template:
+    metadata:
+      labels:
+        app: fd-reader-heartbeat-blob
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: fd-reader-heartbeat-blob
+        image: betacontainers.azurecr.io/fd-reader-heartbeat-blob:latest
+        ports:
+        - containerPort: 8000  # Main API
+        - containerPort: 9090  # Metrics
+        env:
+        - name: FD_SERVICE_NAME
+          value: "fd-reader-heartbeat-blob"
+        - name: FD_KAFKA_TOPIC
+          value: "telematics.raw.telematics_heartbeat"
+        - name: FD_MONGO_COLLECTION_NAME
+          value: "heartbeats"
+
+        envFrom:
+        - configMapRef:
+            name: global-env-vars
+        - secretRef:
+            name: mongodb-secrets
+        - secretRef:
+            name: kafka-secrets
