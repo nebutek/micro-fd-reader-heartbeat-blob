@@ -11,14 +11,14 @@ import time
 from typing import Dict, Any
 
 import arrow
+from lib.tenant_connect.load_connections import load_blob_connections
 from lib.kafka_reader import KafkaReader
 from lib.hos_event_handler import HOSEvent
 from lib.MongoDBDockerClient import MongoDBDockerClient
-from lib.tenant_connect.load_connections import load_blob_connections
 from lib.BlobWriter import BlobWriter
 from lib.CosmosDBManager import CosmosDBManager
 from lib.tenant_connect.manager_blob import TenantBlobManager
-from app.blob_data_handler import initialize_blob_writers, dispatch_blob_message
+from blob_data_handler import initialize_blob_writers, dispatch_blob_message
 
 # Setup logging
 log_level = os.getenv('FD_LOG_LEVEL', 'INFO').upper()
@@ -71,7 +71,7 @@ def process_message(message):
 
         tenant_id = message.get('tenant_id')
         # Dispatch message to the correct BlobWriter
-        dispatch_blob_message(tenant_id, message)
+        dispatch_blob_message(tenant_id, message.get('data'))
         return True
         
     except ValueError as e:
