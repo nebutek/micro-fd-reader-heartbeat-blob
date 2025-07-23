@@ -59,7 +59,7 @@ def process_message(message):
                 raise ValueError(f"Missing required field: {field}")
         
         # Log message processing
-        logger.info(f"Processing message: tenant_id: {message.get('tenant_id')}, asset_id: {message.get('asset_id')}, driver_id: {message.get('driver_id')}, driver_name: {message.get('driver_name')}, timestamp: {message.get('timestamp')}")
+        logger.debug(f"Processing message: tenant_id: {message.get('tenant_id')}, asset_id: {message.get('asset_id')}, driver_id: {message.get('driver_id')}, driver_name: {message.get('driver_name')}, timestamp: {message.get('timestamp')}")
         
         # Convert timestamp to datetime object
         try:

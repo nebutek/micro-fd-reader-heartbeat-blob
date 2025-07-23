@@ -7,6 +7,16 @@ import json
 import math, time
 import os
 import queue
+import logging
+
+# Initialize logger for this module
+# Setup logging
+log_level = os.getenv('FD_LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(
+    level=getattr(logging, log_level),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
 
 
 # The QueueConsumer class is designed to handle message consumption from a queue, specifically tailored for environments that utilize message queuing protocols like AMQP, with RabbitMQ as a common example. It initializes with a queue name and a counter function, managing connections to a messaging server using credentials provided during instantiation. The class encapsulates the functionality to create a connection to the server, process incoming messages by appending them to an internal buffer, and manage the lifecycle of the connection and message consumption process.
@@ -46,7 +56,7 @@ class BlobWriter:
         """Sets up a timer to call write_buffer_to_blob periodically."""
         if self.running:
             self.write_buffer_to_blob()
-            self.timer = threading.Timer(1, self.run_periodically)
+            self.timer = threading.Timer(10, self.run_periodically)
             self.timer.start()
 
     def stop(self):
@@ -111,10 +121,10 @@ class BlobWriter:
                     blob_client.append_block(data_to_append.encode('utf-8'))
                     elapsed_time_ms = (time.time() - start_time) * 1000
                 except Exception as e:
-                    print(f"An error occurred while appending data ({len(data_to_append)} bytes) to blob {blob_name}: {e}. ")
+                    logging.error(f"An error occurred while appending data ({len(data_to_append)} bytes) to blob {blob_name}: {e}. ")
                     # print(f"Successfully appended {len(packet_data)} of {len(data)} records, {len(data_to_append)} bytes, to blob: {blob_name} in {elapsed_time_ms:.2f} ms")
         except Exception as e:
-            print(f"An error occurred while appending data ({len(packet_data)} ) to the blob {blob_name}: {e}. ")
+            logging.error(f"An error occurred while appending data ({len(packet_data)} ) to the blob {blob_name}: {e}. ")
 
     def write_buffer_to_blob(self):
         tmp_buffer = self.clear_buffer()
@@ -122,6 +132,7 @@ class BlobWriter:
         for data in blob_data:
             file_data = self.filter_by_type_and_date(tmp_buffer, data['type'], data['date'], data['time'])
             file_name = f"{data['type']}.{data['date']}.{data['time']}.fd"
+            logging.info(f"Writing blob: {file_name}")
             self.create_append_blob(file_name)
             self.append_data_to_blob(file_name, file_data)
 
